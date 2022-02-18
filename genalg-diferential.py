@@ -14,7 +14,7 @@ start_time = datetime.now()
 gencount = 0
 inf = float("inf")
 numthreads = 6
-mutRate = 0.001
+mutRate = 0.0001
 
 def eggholder(x,y):
     return (-(y+47)*math.sin(math.sqrt(abs(x/2+(y+47)))))-(x*math.sin(math.sqrt(abs(x-(y+47)))))
@@ -55,7 +55,7 @@ def generate(poplength=1500):
        
     except KeyboardInterrupt:
         end_time = datetime.now()
-        file = open("population.txt",'w')
+        file = open("population-dif.txt",'w')
         file.write(str(len(pop)) + '\n')
         for p in pop:
             file.write(str(p[0]) + ' ,' + str(p[1]) + '\n')
@@ -66,7 +66,7 @@ def generate(poplength=1500):
 
     except RequirementMet:
         end_time = datetime.now()
-        file = open("population.txt",'w')
+        file = open("population-dif.txt",'w')
         file.write(str(len(pop)) + '\n')
         for p in pop:
             file.write(str(p[0]) + ' ,' + str(p[1]) + '\n')
@@ -74,7 +74,6 @@ def generate(poplength=1500):
         file.write('time: (hh:mm:ss.ms) {}'.format(end_time-start_time))
         file.close()
         evaluate(pop)
-
     
         
 
@@ -108,20 +107,25 @@ def cross(parent1,parent2):
         child1[1],child2[1] = parent2[1],parent1[1] # y hodnoty len vymenim
     return child1,child2
 
+def crossmore(parents):
+    child = []
+    idxx = random.randrange(63)
+    idxy = random.randrange(63)
+    child.append(crossone(parents[0][0],parents[1][0],idxx)[0])
+    child.append(crossone(parents[2][1],parents[3][1],idxx)[0])
+    return child
+
 def selection(population):
     newpop = []
-    
-    numpairings = random.randint(len(population)//2-20,(len(population)//2)+21)
-
     random.shuffle(population)
-    for i in range(numpairings):
-        start = random.randint(0, len(population)-16)
-        win = tournament(population[start:start+16])
-        ch1, ch2 = cross(population[i],win)
-        newpop.append(ch1)
-        newpop.append(ch2)
-        
-        
+    
+    for ind in population:
+        start = random.randint(0, len(population)-4)
+        child = crossmore(population[start:start+4])
+        if(fitness(ind) <= fitness(child)):
+            newpop.append(ind)
+        else:
+            newpop.append(child)
     return newpop
 
 def tournament(subpop):
@@ -180,4 +184,6 @@ def crossone(x,y,pos):
     tempy.append(bitsx[pos:])
     return tempx.float,tempy.float
 
-generate(200000)
+    
+
+generate(1000)

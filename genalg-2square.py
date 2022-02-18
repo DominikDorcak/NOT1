@@ -9,7 +9,7 @@ import concurrent.futures
 class RequirementMet(Exception):
     pass
 
-accuracy = 0.0001
+accuracy = 0.0000001
 start_time = datetime.now() 
 gencount = 0
 inf = float("inf")
@@ -24,10 +24,7 @@ def firstgen(length):
     population = []
     gencount = 1
     for x in range(length):
-        individual = []
-        individual.append(random.uniform(-512,512))
-        individual.append(random.uniform(-512,512))
-        population.append(individual)
+        population.append(random.uniform(1,2))
     evaluate(population)
     return population
 
@@ -48,70 +45,57 @@ def generate(poplength=1500):
                 for f in futures:
                     newpop.extend(f.result())
             pop = newpop
-            gencount += 1 
-
+            gencount+=1
             evaluate(pop)
   
        
     except KeyboardInterrupt:
         end_time = datetime.now()
-        file = open("population.txt",'w')
+        file = open("population2square.txt",'w')
         file.write(str(len(pop)) + '\n')
         for p in pop:
-            file.write(str(p[0]) + ' ,' + str(p[1]) + '\n')
+            file.write(str(p) + '\n')
                        
         file.write('time: (hh:mm:ss.ms) {}'.format(end_time-start_time))
         file.close()
-        evaluate(pop)
-
     except RequirementMet:
         end_time = datetime.now()
-        file = open("population.txt",'w')
+        file = open("population2square.txt",'w')
         file.write(str(len(pop)) + '\n')
         for p in pop:
-            file.write(str(p[0]) + ' ,' + str(p[1]) + '\n')
+            file.write(str(p) + '\n')
                        
         file.write('time: (hh:mm:ss.ms) {}'.format(end_time-start_time))
         file.close()
-        evaluate(pop)
-
     
         
 
 
 
 def fitness(individual):
-    if abs(individual[0]) > 512.0 or abs(individual[1]) > 512.0:
-        return 10000
-    return abs(eggholder(individual[0],individual[1])+959.6406627106155)
+    return abs(2-(individual*individual))
 
 # mutacia, flipneme jeden bit v jednincovi s pravdepodobnostou mutRate
 def mutate(individual, mutRate):
     retval = individual
     if random.random() < mutRate: 
-        idx = random.randrange(127) # nahodne cele cislo od 0 do 127(pozicia v dvoch float cislach - obe po 64 bitov)
-        if idx>63:
-            retval[1] = bitflip(retval[1],idx-64)
-        else:
-            retval[0] = bitflip(retval[0],idx)        
+        idx = random.randrange(63) # nahodne cele cislo od 0 do 127(pozicia v dvoch float cislach - obe po 64 bitov)
+        retval = bitflip(individual,idx)       
     return retval
 
 
 #  krizenie na nahodnej pozicii, vratime deti
 def cross(parent1,parent2):
     child1, child2 = parent1,parent2
-    idx = random.randrange(127)
-    if idx>63:
-        child1[1],child2[1] = crossone(parent1[1],parent2[1],idx-64)
-    else:
-        child1[0],child2[0] = crossone(parent1[0],parent2[0],idx)
-        child1[1],child2[1] = parent2[1],parent1[1] # y hodnoty len vymenim
+    idx = random.randrange(63)
+    child1, child2 = crossone(parent1,parent2,idx)
+   
     return child1,child2
 
 def selection(population):
     newpop = []
     
-    numpairings = random.randint(len(population)//2-20,(len(population)//2)+21)
+    numpairings = random.randint(len(population)//2-2,(len(population)//2)+3)
 
     random.shuffle(population)
     for i in range(numpairings):
@@ -137,13 +121,14 @@ def nextgen(population):
     mutedpop = nextpop
     for i in range(len(nextpop)):
         mutedpop[i] = mutate(nextpop[i],mutRate)
+    gencount += 1 
     return mutedpop
         
 def evaluate(population):
     fit =[fitness(p) for p in population]   
                
-    mean = np.nanmean(fit)
-    minimum = np.nanmin(fit)
+    mean = np.mean(fit)
+    minimum = np.min(fit)
     if minimum < accuracy:
         raise RequirementMet
     
@@ -180,4 +165,4 @@ def crossone(x,y,pos):
     tempy.append(bitsx[pos:])
     return tempx.float,tempy.float
 
-generate(200000)
+generate(5000)
